@@ -1,0 +1,50 @@
+import urequests
+import json
+import time
+import board
+import adafruit_dht
+
+# Replace with your InfluxDB credentials
+url = "https://<your-influxdb-url>:8086/write?db=<your-influxdb-database>"
+token = "<your-influxdb-token>"
+
+# Replace with your measurement name
+measurement = "my_measurement"
+
+# Replace with your field names
+field1 = "field1"
+field2 = "field2"
+
+# Initialize the DHT11 sensor
+dht11 = adafruit_dht.DHT11(board.D4)
+
+while True:
+    try:
+        # Read the temperature and humidity from the DHT11 sensor
+        temperature_c = dht11.temperature
+        humidity = dht11.humidity
+
+        # Create a JSON payload with the sensor data
+        data = {
+            "measurement": measurement,
+            "fields": {
+                field1: temperature_c,
+                field2: humidity
+            }
+        }
+
+        # Convert the JSON payload to a string
+        payload = json.dumps(data)
+
+        # Send an HTTP POST request to the InfluxDB API to write the data to the database
+        headers = {"Authorization": "Token " + token}
+        response = urequests.post(url, data=payload, headers=headers)
+
+        # Print the response status code
+        print("Status code:", response.status_code)
+
+        # Wait for 10 seconds before reading the sensor again
+        time.sleep(10)
+
+    except Exception as e:
+        print("Error:", e)
