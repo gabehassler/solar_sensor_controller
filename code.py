@@ -33,7 +33,6 @@ def log_data():
         socket_pool=pool,
         ssl_context=ssl_context,
     )
-    assert 1 == 2
 
     mqtt_client.connect()
 
@@ -55,9 +54,15 @@ except Exception as e:
     print("Resetting microcontroller in 10 seconds")
     # write to log to file
     with open('errors.log', 'a') as f:
+        f.write('Error:\n')
         f.write(str(e))
         f.write('\n')
     time.sleep(10)
     microcontroller.reset()
+
+
+
+
+
 
 
