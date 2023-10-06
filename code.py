@@ -1,44 +1,63 @@
-import sys
-import json
 import os
-
+import time
+import ssl
+import socketpool
+import wifi
+import adafruit_minimqtt.adafruit_minimqtt as MQTT
+import sys
+import microcontroller
+import storage
 
 
 sys.path.append('./code/')
 import pico_wifi as pw
-# import wifi_test
 import sensors
 
-# sensors.log_to_screen()
+def log_data():
 
-pw.connect_wifi()
-requests = pw.setup_requests()
-
-data = sensors.get_sensor_data()
-url = "https://us-central1-1.gcp.cloud2.influxdata.com:8086/api/v2/write?bucket=solar_power_temp/rp&precision=ns"
-measurement = "power_temp"
-
-data = {
-    "measurement": measurement,
-    "fields": {
-        'temp': data['temp'],
-        'current': data['current'],
-        'voltage': data['voltage'],
-        'power': data['power']
-    }
-}
+    pw.connect_wifi()
+    # requests = pw.setup_requests()
+    pool = socketpool.SocketPool(wifi.radio)
+    ssl_context = ssl.create_default_context()
 
 
+    aio_user = os.getenv('AIO_USERNAME')
+    aio_key = os.getenv('AIO_KEY')
+    sensor_id = os.getenv('SENSOR_ID')
 
-payload = json.dumps(data)
-headers = {"Authorization": "Token " + os.getenv('INFLUXDB_TOKEN')}
-print(url)
-print(headers)
-print(payload)
-response = requests.post(url, data=payload, headers=headers)
-print(response)
+    mqtt_client = MQTT.MQTT(
+        broker="io.adafruit.com",
+        port=1883,
+        username=aio_user,
+        password=aio_key,
+        socket_pool=pool,
+        ssl_context=ssl_context,
+    )
+    assert 1 == 2
 
-# post to influxdb
+    mqtt_client.connect()
+
+    SENSORS = sensors.setup_sensors()
+
+    while True:
+        mqtt_client.loop()
+        data = sensors.get_sensor_data(SENSORS)
+
+        for k in data.keys():
+            feed = aio_user + '/feeds/sensor' + str(sensor_id) + '.' + k
+            mqtt_client.publish(feed, data[k])
+        time.sleep(60)
+
+try:
+    log_data()
+except Exception as e:
+    print("Error:\n", str(e))
+    print("Resetting microcontroller in 10 seconds")
+    # write to log to file
+    with open('errors.log', 'a') as f:
+        f.write(str(e))
+        f.write('\n')
+    time.sleep(10)
+    microcontroller.reset()
 
 
-# import time

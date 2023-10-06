@@ -40,9 +40,10 @@ def log_to_screen(iters = float('inf')):
         time.sleep(2)
         count += 1
 
-def get_sensor_data():
+
+
+def get_sensor_data(sensors):
     # setup sensors
-    sensors = setup_sensors()
     ds18b20 = sensors['ds18b20']
     ina260 = sensors['ina260']
 
