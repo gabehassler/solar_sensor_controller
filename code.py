@@ -18,12 +18,23 @@ sys.path.append('./code/')
 import pico_wifi as pw
 import sensors
 
+def blink(t_on, t_off, n):
+    for i in range(n):
+        led.value = True
+        time.sleep(t_on)
+        led.value = False
+        time.sleep(t_off)
+
+
 def log_data():
 
+    blink(1, 0.5, 3)
     pw.connect_wifi()
     # requests = pw.setup_requests()
     pool = socketpool.SocketPool(wifi.radio)
     ssl_context = ssl.create_default_context()
+
+    blink(0.5, 0.25, 3)
 
 
     aio_user = os.getenv('AIO_USERNAME')
@@ -51,18 +62,17 @@ def log_data():
     )
 
     # mqtt_client.connect()
-    print("A")
     mosquitto_client.connect()
-    print("B")
+
+    blink(1, 0.5, 2)
 
     SENSORS = sensors.setup_sensors()
 
+    blink(0.5, 0.25, 2)
+
     while True:
-        for i in range(3):
-            led.value = True
-            time.sleep(i + 1)
-            led.value = False
-            time.sleep(0.5)
+        t0 = time.time()
+        blink(0.25, 0.25, 6)
         # mqtt_client.loop()
         mosquitto_client.loop()
         data = sensors.get_sensor_data(SENSORS)
@@ -74,12 +84,10 @@ def log_data():
         mosquitto_client.publish('solar/sensor' + str(os.getenv('SENSOR_ID')) + '/temppower', 
                                  sensors.prepare_data_mqtt(data))
 
-        for i in range(4):
-            led.value = True
-            time.sleep(0.5)
-            led.value = False
-            time.sleep(0.25)
-        time.sleep(10)
+        blink(1, 0.5, 6)
+        t1 = time.time()
+        t_rem = max(0, 120 - (t1 - t0))
+        time.sleep(t_rem)
 
 try:
     log_data()
@@ -100,8 +108,8 @@ except Exception as e:
     for i in range(10):
         led.value = not led.value
         time.sleep(1)
-    # time.sleep(20)
-    # microcontroller.reset()
+    time.sleep(20)
+    microcontroller.reset()
 
 
 
