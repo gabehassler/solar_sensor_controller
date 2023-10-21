@@ -70,11 +70,21 @@ def log_data():
 
     blink(0.5, 0.25, 2)
 
+
     while True:
         t0 = time.time()
         blink(0.25, 0.25, 6)
         # mqtt_client.loop()
-        mosquitto_client.loop()
+        try:
+            print("looping...")
+            mosquitto_client.loop()
+            print("success!")
+        except Exception as e:
+            print("failed, trying again")
+            mosquitto_client.connect()
+            mosquitto_client.loop()
+            print("success after retry!")
+        
         data = sensors.get_sensor_data(SENSORS)
 
         # for k in data.keys():
