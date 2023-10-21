@@ -8,14 +8,14 @@ import adafruit_ds18x20
 import adafruit_ina260
 
 def setup_sensors():
-    ow_bus = OneWireBus(board.GP17)
+    ow_bus = OneWireBus(board.GP28)
 
     devices = ow_bus.scan()
     assert len(devices) == 1
 
     ds18b20 = adafruit_ds18x20.DS18X20(ow_bus, devices[0])
 
-    i2c = busio.I2C(board.GP19, board.GP18)
+    i2c = busio.I2C(board.GP27, board.GP26)
     ina260 = adafruit_ina260.INA260(i2c)
 
     # return dictionary
@@ -54,3 +54,11 @@ def get_sensor_data(sensors):
         'voltage': ina260.voltage,
         'power': ina260.power
     }
+
+def prepare_data_mqtt(data):
+    vars = ['temp', 'current', 'voltage', 'power']
+    s = [v + ':' + str(data[v]) for v in vars]
+    return ','.join(s)
+
+
+
