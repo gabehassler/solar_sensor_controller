@@ -29,7 +29,14 @@ def blink(t_on, t_off, n):
 def log_data():
 
     blink(1, 0.5, 3)
-    pw.connect_wifi()
+    for i in range(10):
+        try:
+            print("connecting to wifi...")
+            pw.connect_wifi()
+            print("connected")
+        except:
+            time.sleep(3)
+    
     # requests = pw.setup_requests()
     pool = socketpool.SocketPool(wifi.radio)
     ssl_context = ssl.create_default_context()
